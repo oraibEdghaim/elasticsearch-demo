@@ -1,4 +1,4 @@
-# Elastic Search 
+# Elasticsearch 
 
 ## General Information
 This project is created as coding exercise 
