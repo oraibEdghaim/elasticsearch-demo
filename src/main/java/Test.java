@@ -88,6 +88,9 @@ public class Test {
         System.out.println("The avg value is " + stats.getAvg());
 
 
+        Map<String,Long> buckets = MovieUtil.getTermsAggBuckets(field);
+        buckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + buckets.get(bucket)));
+
         DBUtil.closeConnection();
     }
 }

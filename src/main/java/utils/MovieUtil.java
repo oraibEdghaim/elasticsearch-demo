@@ -20,6 +20,8 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
@@ -230,5 +232,25 @@ public class MovieUtil {
        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
        Stats stats = response.getAggregations().get("agg");
        return stats;
+   }
+   public static Map<String, Long> getTermsAggBuckets(String field) throws IOException {
+       SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+       String aggregationName ="ByField";
+       searchBuilder.aggregation(AggregationBuilders.terms(aggregationName).field(field));
+       searchBuilder.size(0);
+
+       SearchRequest searchRequest = new SearchRequest(INDEX);
+       searchRequest.source(searchBuilder);
+
+       SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+       Aggregations aggregations = response.getAggregations();
+       Terms buckets = aggregations.get(aggregationName);
+       Map<String,Long> bucketResults =  new HashMap<String, Long>();
+       for (Terms.Bucket bucket : buckets.getBuckets()) {
+           String bucketKey = bucket.getKeyAsString();
+           long totalDocs = bucket.getDocCount();
+           bucketResults.put(bucketKey,totalDocs);
+       }
+       return bucketResults;
    }
 }
