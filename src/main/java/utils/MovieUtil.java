@@ -19,14 +19,20 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.range.Range;
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.range.RangeAggregator;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.min.Min;
 import org.elasticsearch.search.aggregations.metrics.min.MinAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
 import org.elasticsearch.search.aggregations.metrics.stats.StatsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+
 
 import java.io.IOException;
 import java.util.*;
@@ -245,7 +251,7 @@ public class MovieUtil {
        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
        Aggregations aggregations = response.getAggregations();
        Terms buckets = aggregations.get(aggregationName);
-       Map<String,Long> bucketResults =  new HashMap<String, Long>();
+       Map<String,Long> bucketResults =  new HashMap<>();
        for (Terms.Bucket bucket : buckets.getBuckets()) {
            String bucketKey = bucket.getKeyAsString();
            long totalDocs = bucket.getDocCount();
@@ -253,4 +259,63 @@ public class MovieUtil {
        }
        return bucketResults;
    }
+    public static Map<String, Long>  getRangeAggBuckets(String field, double from, double to) throws IOException {
+        SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+        String aggregationName ="RangeAgg";
+        searchBuilder.aggregation(AggregationBuilders.range(aggregationName).field(field).addRange(from,to));
+        searchBuilder.size(0);
+
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        searchRequest.source(searchBuilder);
+
+        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        Aggregations aggregations = response.getAggregations();
+        Range buckets = aggregations.get(aggregationName);
+        Map<String,Long> bucketResults =  new HashMap<>();
+        for (Range.Bucket bucket : buckets.getBuckets()) {
+            String bucketKey = bucket.getKeyAsString();
+            long totalDocs = bucket.getDocCount();
+            bucketResults.put(bucketKey,totalDocs);
+        }
+        return bucketResults;
+    }
+
+    public static void printSubAggBuckets (String field, String subField) throws IOException {
+        SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+        String aggregationName = "SubAggByRange";
+        RangeAggregationBuilder rangeBuilder = new RangeAggregationBuilder(aggregationName);
+        org.elasticsearch.search.aggregations.bucket.range.RangeAggregator.Range range1 = new RangeAggregator.Range("2012-2015",2012.0,2015.0);
+        org.elasticsearch.search.aggregations.bucket.range.RangeAggregator.Range range2 = new RangeAggregator.Range("2016-2020",2016.0,2020.0);
+        org.elasticsearch.search.aggregations.bucket.range.RangeAggregator.Range range3 = new RangeAggregator.Range("2020",2020.0,null);
+        rangeBuilder.field(field).addRange(range1);
+        rangeBuilder.field(field).addRange(range2);
+        rangeBuilder.field(field).addRange(range3);
+
+        String subAggregationName = "subAggByTerm";
+        TermsAggregationBuilder termBuilder = AggregationBuilders.terms(subAggregationName).field(subField);
+
+        rangeBuilder.subAggregation(termBuilder);
+        searchBuilder.aggregation(rangeBuilder);
+        searchBuilder.size(0);
+
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        searchRequest.source(searchBuilder);
+
+        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        Aggregations aggregations = response.getAggregations();
+        Range buckets = aggregations.get(aggregationName);
+        System.out.println("Result of printSubAggBuckets funtionality ");
+        for (Range.Bucket bucket : buckets.getBuckets()) {
+            String bucketKey = bucket.getKeyAsString();
+            long totalDocs = bucket.getDocCount();
+            Terms termBuckets = bucket.getAggregations().get(subAggregationName);
+            System.out.println("Bucket key is " + bucketKey );
+            System.out.println("Bucket total documents is " + totalDocs);
+            System.out.println("Sub aggregation buckets by term");
+            termBuckets.getBuckets().forEach(termBucket -> System.out.println("Key : " + termBucket.getKeyAsString() + ", Total documents : " +termBucket.getDocCount()));
+        }
+
+
+    }
+
 }

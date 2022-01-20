@@ -89,8 +89,14 @@ public class Test {
 
 
         Map<String,Long> buckets = MovieUtil.getTermsAggBuckets(field);
+        System.out.println("The term buckets : ");
         buckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + buckets.get(bucket)));
 
-        DBUtil.closeConnection();
+        Map<String,Long> rangeBuckets = MovieUtil.getRangeAggBuckets(field,2015,2020);
+        System.out.println("The range buckets");
+        rangeBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + rangeBuckets.get(bucket)));
+
+       MovieUtil.printSubAggBuckets(field,"type");
+       DBUtil.closeConnection();
     }
 }
