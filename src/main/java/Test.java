@@ -1,4 +1,8 @@
 import api.Movie;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
@@ -14,19 +18,32 @@ import java.util.Map;
 import java.util.Optional;
 
 public class Test {
+    private static RestHighLevelClient restHighLevelClient;
     public static void main(String[] args) throws IOException {
 
-        DBUtil.makeConnection();
+       DBUtil.makeConnection();
+
         testNetflixElasticSearchAPIs();
         testCommericialElasticSearchAPIs();
+        testCreationElasticSearchIndex();
         DBUtil.closeConnection();
     }
+
     public static void testCommericialElasticSearchAPIs() throws IOException {
       String field = "InvoiceDate";
       Map<String,Long> dateHistogramBuckets = CommercialUtil.getDateHistogramBucket(field,DateHistogramInterval.days(1));
       dateHistogramBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + dateHistogramBuckets.get(bucket)));
 
     }
+    private static void testCreationElasticSearchIndex() throws IOException {
+        boolean isCreatedSuccsfully = DBUtil.createMessagnerIndex();
+        if(isCreatedSuccsfully){
+            System.out.println("The Messenger index is created successfully");
+        }else{
+            System.out.println("Can not create a messenger index");
+        }
+    }
+
     public static void testNetflixElasticSearchAPIs() throws IOException {
         System.out.println("Getting netflix movie...");
         Movie movie = MovieUtil.getMovieById("-aNBSH4BA9zdzX6RVD_r");
