@@ -16,11 +16,8 @@ public class DBUtil {
     private static final String SCHEME = "http";
 
     private static RestHighLevelClient restHighLevelClient;
-    private static final String INDEX = "netflix";
-    private static final String TYPE = "_doc";
 
-
-    public static synchronized RestHighLevelClient makeConnection() {
+    public static synchronized RestHighLevelClient makeConnection( ) {
 
         if(restHighLevelClient == null) {
              restHighLevelClient = new RestHighLevelClient(

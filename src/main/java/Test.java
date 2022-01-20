@@ -1,6 +1,9 @@
 import api.Movie;
+import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
+import org.joda.time.Interval;
+import utils.CommercialUtil;
 import utils.DBUtil;
 import utils.MovieUtil;
 
@@ -14,6 +17,17 @@ public class Test {
     public static void main(String[] args) throws IOException {
 
         DBUtil.makeConnection();
+        testNetflixElasticSearchAPIs();
+        testCommericialElasticSearchAPIs();
+        DBUtil.closeConnection();
+    }
+    public static void testCommericialElasticSearchAPIs() throws IOException {
+      String field = "InvoiceDate";
+      Map<String,Long> dateHistogramBuckets = CommercialUtil.getDateHistogramBucket(field,DateHistogramInterval.days(1));
+      dateHistogramBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + dateHistogramBuckets.get(bucket)));
+
+    }
+    public static void testNetflixElasticSearchAPIs() throws IOException {
         System.out.println("Getting netflix movie...");
         Movie movie = MovieUtil.getMovieById("-aNBSH4BA9zdzX6RVD_r");
         System.out.println("Movie from DB  --> " + movie);
@@ -39,11 +53,11 @@ public class Test {
 
         System.out.println("Changing titile of the movie id : " + "3aec63d6-b006-44c2-8d4d-0f25ac0514a5");
         movie2.setTitle("updated movie");
-      //  movie2 = MovieUtil.updateMovieById("3aec63d6-b006-44c2-8d4d-0f25ac0514a5",movie2);
+        //  movie2 = MovieUtil.updateMovieById("3aec63d6-b006-44c2-8d4d-0f25ac0514a5",movie2);
         System.out.println("Movie updated  --> " + movie2);
 
         System.out.println("Delete the document movie with id : 3aec63d6-b006-44c2-8d4d-0f25ac0514a5");
-       // MovieUtil.deleteMovieById("3aec63d6-b006-44c2-8d4d-0f25ac0514a5");
+        // MovieUtil.deleteMovieById("3aec63d6-b006-44c2-8d4d-0f25ac0514a5");
 
         System.out.println("search based on the document title : ");
         String title ="Dead Sea";
@@ -96,12 +110,9 @@ public class Test {
         System.out.println("The range buckets");
         rangeBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + rangeBuckets.get(bucket)));
 
-       MovieUtil.printSubAggBuckets(field,"type");
-       Map<String,Long> histogramBuckets = MovieUtil.getHistogramBuckets(field,10);
-       histogramBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + histogramBuckets.get(bucket)));
-
-
-
-        DBUtil.closeConnection();
+        MovieUtil.printSubAggBuckets(field,"type");
+        Map<String,Long> histogramBuckets = MovieUtil.getHistogramBuckets(field,10);
+        histogramBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + histogramBuckets.get(bucket)));
     }
+
 }
