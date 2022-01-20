@@ -3,7 +3,6 @@ package utils;
 import api.Movie;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
@@ -18,6 +17,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
@@ -50,54 +50,35 @@ public class MovieUtil {
     static {
         restHighLevelClient = DBUtil.makeConnection();
     }
-    public static Movie insertMovie(Movie movie){
-        try {
+    private MovieUtil(){
+
+    }
+    public static RestStatus insertMovie(Movie movie) throws IOException {
             String movieJson = objectMapper.writeValueAsString(movie);
             IndexRequest indexRequest = new IndexRequest(INDEX, TYPE, UUID.randomUUID().toString())
                     .source(movieJson,XContentType.JSON);
             IndexResponse response = restHighLevelClient.index(indexRequest);
-        } catch(ElasticsearchException e) {
-            System.out.println(e.getMessage());
-        } catch (java.io.IOException ex){
-            System.out.println(ex.getMessage());
-        }
-        return movie;
+            return response.status();
     }
 
-    public static Movie getMovieById(String id){
+    public static Movie getMovieById(String id) throws IOException {
         GetRequest getPersonRequest = new GetRequest(INDEX,TYPE, id);
         GetResponse getResponse = null;
-        try {
-            getResponse = restHighLevelClient.get(getPersonRequest, RequestOptions.DEFAULT);
-        } catch (java.io.IOException e){
-            System.out.println(e.getMessage());
-        }
-        Movie movie =  getResponse != null ? objectMapper.convertValue(getResponse.getSourceAsMap(), Movie.class) : null;
-        return movie;
+        getResponse = restHighLevelClient.get(getPersonRequest, RequestOptions.DEFAULT);
+        return getResponse != null ? objectMapper.convertValue(getResponse.getSourceAsMap(), Movie.class) : null;
     }
-    public static Movie updateMovieById(String id, Movie movie){
+    public static Movie updateMovieById(String id, Movie movie) throws IOException {
         UpdateRequest updateRequest = new UpdateRequest(INDEX, TYPE, id).fetchSource(true);    // Fetch Object after its update
-        try {
             String movieJson = objectMapper.writeValueAsString(movie);
             updateRequest.doc(movieJson, XContentType.JSON);
             UpdateResponse updateResponse = restHighLevelClient.update(updateRequest);
             return objectMapper.convertValue(updateResponse.getGetResult().sourceAsMap(), Movie.class);
-        }catch (JsonProcessingException e){
-            System.out.println(e.getMessage());
-        } catch (java.io.IOException e){
-            System.out.println(e.getMessage());
-        }
-        System.out.println("Unable to update movie");
-        return null;
     }
 
-    public static void deleteMovieById(String id) {
+    public static RestStatus deleteMovieById(String id) throws IOException {
         DeleteRequest deleteRequest = new DeleteRequest(INDEX, TYPE, id);
-        try {
-            DeleteResponse deleteResponse = restHighLevelClient.delete(deleteRequest);
-        } catch (java.io.IOException e){
-            System.out.println(e.getMessage());
-        }
+        DeleteResponse deleteResponse = restHighLevelClient.delete(deleteRequest);
+        return deleteResponse.status();
     }
 
     public static Optional<Movie> getMovieByTitle(String title) throws IOException {

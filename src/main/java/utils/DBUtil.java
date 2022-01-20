@@ -23,6 +23,9 @@ public class DBUtil {
 
     private static RestHighLevelClient restHighLevelClient;
 
+    private DBUtil(){
+
+    }
     public static synchronized RestHighLevelClient makeConnection() {
 
         if(restHighLevelClient == null) {

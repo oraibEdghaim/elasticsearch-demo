@@ -1,6 +1,5 @@
 package utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -17,11 +16,12 @@ import java.util.Map;
 
 public class CommercialUtil {
 
-    private static ObjectMapper objectMapper = new ObjectMapper();
     private static final String INDEX = "ecommerce_data_test";
-    private static final String TYPE = "_doc";
     private static RestHighLevelClient restHighLevelClient;
 
+    private CommercialUtil(){
+
+    }
     static {
         restHighLevelClient = DBUtil.makeConnection();
     }

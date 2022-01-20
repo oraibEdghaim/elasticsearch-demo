@@ -1,12 +1,8 @@
 import api.Movie;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
-import org.elasticsearch.search.aggregations.metrics.max.Max;
 import org.elasticsearch.search.aggregations.metrics.stats.Stats;
-import org.joda.time.Interval;
 import utils.CommercialUtil;
 import utils.DBUtil;
 import utils.MovieUtil;
@@ -26,6 +22,7 @@ public class Test {
         testNetflixElasticSearchAPIs();
         testCommericialElasticSearchAPIs();
         testCreationElasticSearchIndex();
+
         DBUtil.closeConnection();
     }
 
@@ -64,8 +61,8 @@ public class Test {
         movie2.setListedIn("Documentaries");
         movie2.setDateAdded("Jan 16,2022");
 
-        movie2 = MovieUtil.insertMovie(movie2);
-        System.out.println("Movie inserted --> " + movie2);
+        RestStatus status = MovieUtil.insertMovie(movie2);
+        System.out.println("Movie inserting status --> " + status.getStatus());
 
 
         System.out.println("Changing titile of the movie id : " + "3aec63d6-b006-44c2-8d4d-0f25ac0514a5");
