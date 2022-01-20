@@ -22,8 +22,21 @@ public class Test {
         testNetflixElasticSearchAPIs();
         testCommericialElasticSearchAPIs();
         testCreationElasticSearchIndex();
+        testPaginationElasticSearchAPIs();
 
         DBUtil.closeConnection();
+    }
+
+    private static void testPaginationElasticSearchAPIs() throws IOException {
+
+        //From - size
+        Optional<List<Movie>> movies =  MovieUtil.getPageResult(10,10);
+        movies.get().forEach(m -> System.out.println("The movies are : " +m));
+
+        // TO DO : Search Scroll API
+
+
+        // TO DO : Search after API
     }
 
     public static void testCommericialElasticSearchAPIs() throws IOException {

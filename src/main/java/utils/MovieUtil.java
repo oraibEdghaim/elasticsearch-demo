@@ -310,4 +310,22 @@ public class MovieUtil {
         histogramResults.getBuckets().forEach(bucket -> buckets.put(bucket.getKeyAsString(),bucket.getDocCount()));
         return buckets;
     }
+    // pagination sections :
+    public static Optional<List<Movie>> getPageResult(int from, int size) throws IOException {
+        SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+        searchBuilder.query(QueryBuilders.matchAllQuery());
+        searchBuilder.from(from);
+        searchBuilder.size(size);
+
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        searchRequest.source(searchBuilder);
+        System.out.println("Pagination based on from and size parameter : from : "+from + ", size : "+size);
+        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        List<Movie> movies = new ArrayList<Movie>();
+        if(!isNull(response)){
+            movies = Arrays.asList(response.getHits().getHits()).stream().map(hit -> defineHitResponse(hit)).collect(Collectors.toList());
+        }
+        return Optional.ofNullable(movies);
+    }
+
 }
