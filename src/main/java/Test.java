@@ -34,7 +34,8 @@ public class Test {
         movies.get().forEach(m -> System.out.println("The movies are : " +m));
 
         // TO DO : Search Scroll API
-
+        String scrollId =  MovieUtil.printFirstScrollPageResult(10);
+        MovieUtil.printNextScrollPageResult(scrollId);
 
         // TO DO : Search after API
     }

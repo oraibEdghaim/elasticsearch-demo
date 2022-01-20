@@ -11,10 +11,12 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.rest.RestStatus;
@@ -327,5 +329,41 @@ public class MovieUtil {
         }
         return Optional.ofNullable(movies);
     }
+
+    public static String printFirstScrollPageResult(int size) throws IOException {
+
+        SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+        searchBuilder.query(QueryBuilders.matchAllQuery());
+        searchBuilder.size(size);
+
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+
+        searchRequest.source(searchBuilder);
+        System.out.println("First Pagination based on search scroll API " + ", size : "+size);
+        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        List<Movie> movies = new ArrayList<Movie>();
+        if(!isNull(response)){
+            movies = Arrays.asList(response.getHits().getHits()).stream().map(hit -> defineHitResponse(hit)).collect(Collectors.toList());
+        }
+        System.out.println("The first movies are recieved from the scroll API pagination : ");
+        movies.forEach(m -> System.out.println("Moive : " + m));
+        return response.getScrollId();
+    }
+
+    public static void printNextScrollPageResult(String scrollId) throws IOException {
+        SearchScrollRequest searchRequest = new SearchScrollRequest(scrollId);
+        searchRequest.scroll(TimeValue.timeValueMinutes(1L));
+
+        System.out.println("Pagination based on search scroll API " + "Scroll Id "+ scrollId );
+        SearchResponse response = restHighLevelClient.scroll(searchRequest,RequestOptions.DEFAULT);
+        List<Movie> movies = new ArrayList<Movie>();
+        if(!isNull(response)){
+            movies = Arrays.asList(response.getHits().getHits()).stream().map(hit -> defineHitResponse(hit)).collect(Collectors.toList());
+        }
+        System.out.println("The second movies are recieved from the scroll API pagination : ");
+        movies.forEach(m -> System.out.println("Moive : " + m));
+    }
+
 
 }
