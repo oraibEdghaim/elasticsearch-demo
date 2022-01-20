@@ -97,6 +97,11 @@ public class Test {
         rangeBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + rangeBuckets.get(bucket)));
 
        MovieUtil.printSubAggBuckets(field,"type");
-       DBUtil.closeConnection();
+       Map<String,Long> histogramBuckets = MovieUtil.getHistogramBuckets(field,10);
+       histogramBuckets.keySet().stream().forEach(bucket -> System.out.println("Bucket is " + bucket + ", Total doc : " + histogramBuckets.get(bucket)));
+
+
+
+        DBUtil.closeConnection();
     }
 }

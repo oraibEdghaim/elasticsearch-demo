@@ -22,6 +22,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.histogram.Histogram;
+import org.elasticsearch.search.aggregations.bucket.histogram.HistogramAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.Range;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.range.RangeAggregator;
@@ -272,11 +274,8 @@ public class MovieUtil {
         Aggregations aggregations = response.getAggregations();
         Range buckets = aggregations.get(aggregationName);
         Map<String,Long> bucketResults =  new HashMap<>();
-        for (Range.Bucket bucket : buckets.getBuckets()) {
-            String bucketKey = bucket.getKeyAsString();
-            long totalDocs = bucket.getDocCount();
-            bucketResults.put(bucketKey,totalDocs);
-        }
+        buckets.getBuckets().forEach(bucket -> bucketResults.put(bucket.getKeyAsString(),bucket.getDocCount()));
+
         return bucketResults;
     }
 
@@ -304,7 +303,7 @@ public class MovieUtil {
         SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
         Aggregations aggregations = response.getAggregations();
         Range buckets = aggregations.get(aggregationName);
-        System.out.println("Result of printSubAggBuckets funtionality ");
+        System.out.println("Result of printSubAggBuckets funtionality");
         for (Range.Bucket bucket : buckets.getBuckets()) {
             String bucketKey = bucket.getKeyAsString();
             long totalDocs = bucket.getDocCount();
@@ -314,8 +313,22 @@ public class MovieUtil {
             System.out.println("Sub aggregation buckets by term");
             termBuckets.getBuckets().forEach(termBucket -> System.out.println("Key : " + termBucket.getKeyAsString() + ", Total documents : " +termBucket.getDocCount()));
         }
-
-
     }
+    public static Map<String, Long> getHistogramBuckets(String field, double interval) throws IOException {
+        SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
+        String histogramAggregation = "histogramAggregation";
+        HistogramAggregationBuilder histogramBuilder = new HistogramAggregationBuilder(histogramAggregation);
+        histogramBuilder.field(field).interval(interval);
+        searchBuilder.aggregation(histogramBuilder);
 
+        SearchRequest searchRequest = new SearchRequest(INDEX);
+        searchRequest.source(searchBuilder);
+        System.out.println("Histogram Buckets : " + " Field : " + field + ", Interval : " + interval);
+        SearchResponse response = restHighLevelClient.search(searchRequest,RequestOptions.DEFAULT);
+        Aggregations aggregations = response.getAggregations();
+        Histogram histogramResults = aggregations.get(histogramAggregation);
+        Map<String,Long> buckets = new HashMap<>();
+        histogramResults.getBuckets().forEach(bucket -> buckets.put(bucket.getKeyAsString(),bucket.getDocCount()));
+        return buckets;
+    }
 }
